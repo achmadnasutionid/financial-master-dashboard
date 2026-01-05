@@ -1,0 +1,477 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Financial Dashboard Models
+model Company {
+  id         String    @id @default(cuid())
+  name       String    @unique
+  address    String
+  city       String
+  province   String
+  postalCode String?
+  telp       String?
+  email      String?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Billing {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  bankName        String
+  bankAccount     String
+  bankAccountName String
+  ktp             String?
+  npwp            String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Signature {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  role      String?   // Optional role field
+  imageData String    // Base64 encoded signature image
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Planning {
+  id                String         @id @default(cuid())
+  planningId        String         @unique // PLN-YYYY-NNNN format
+  projectName       String
+  clientName        String
+  clientBudget      Float
+  notes             String?
+  status            String         @default("draft") // draft or final
+  generatedQuotationId String?     // ID of auto-generated quotation
+  items             PlanningItem[]
+  deletedAt         DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model PlanningItem {
+  id          String   @id @default(cuid())
+  planningId  String
+  planning    Planning @relation(fields: [planningId], references: [id], onDelete: Cascade)
+  productName String
+  budget      Float
+  expense     Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Quotation {
+  id                String              @id @default(cuid())
+  quotationId       String              @unique // QTN-YYYY-NNNN format
+  
+  // Company data (saved from master)
+  companyName       String
+  companyAddress    String
+  companyCity       String
+  companyProvince   String
+  companyPostalCode String?
+  companyTelp       String?
+  companyEmail      String?
+  
+  productionDate    DateTime
+  billTo            String
+  notes             String?
+  
+  // Billing data (saved from master)
+  billingName       String
+  billingBankName   String
+  billingBankAccount String
+  billingBankAccountName String
+  billingKtp        String?
+  billingNpwp       String?
+  
+  // Signature data (saved from master)
+  signatureName     String
+  signatureRole     String?
+  signatureImageData String
+  
+  pph               String // PPh percentage/type
+  totalAmount       Float
+  status            String              @default("draft") // draft, pending, or accepted
+  generatedInvoiceId String?           // ID of auto-generated invoice
+  
+  items             QuotationItem[]
+  remarks           QuotationRemark[]
+  
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model QuotationItem {
+  id          String                @id @default(cuid())
+  quotationId String
+  quotation   Quotation             @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  productName String
+  total       Float                 // Sum of all child amounts
+  details     QuotationItemDetail[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model QuotationItemDetail {
+  id               String         @id @default(cuid())
+  quotationItemId  String
+  quotationItem    QuotationItem  @relation(fields: [quotationItemId], references: [id], onDelete: Cascade)
+  detail           String
+  unitPrice        Float
+  qty              Float
+  amount           Float          // unitPrice * qty
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model QuotationRemark {
+  id          String    @id @default(cuid())
+  quotationId String
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  text        String
+  isCompleted Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invoice {
+  id                String              @id @default(cuid())
+  invoiceId         String              @unique // INV-YYYY-NNNN format
+  
+  // Reference to original planning (if generated from planning->quotation->invoice flow)
+  planningId        String?
+  
+  // Company data (saved from master)
+  companyName       String
+  companyAddress    String
+  companyCity       String
+  companyProvince   String
+  companyPostalCode String?
+  companyTelp       String?
+  companyEmail      String?
+  
+  productionDate    DateTime
+  billTo            String
+  notes             String?
+  
+  // Billing data (saved from master)
+  billingName       String
+  billingBankName   String
+  billingBankAccount String
+  billingBankAccountName String
+  billingKtp        String?
+  billingNpwp       String?
+  
+  // Signature data (saved from master)
+  signatureName     String
+  signatureRole     String?
+  signatureImageData String
+  
+  pph               String // PPh percentage/type
+  totalAmount       Float
+  status            String              @default("draft") // draft, pending, or paid
+  generatedExpenseId String?           // ID of auto-generated expense
+  
+  items             InvoiceItem[]
+  remarks           InvoiceRemark[]
+  expenses          Expense[]           // Track expenses when invoice is paid
+  
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model InvoiceItem {
+  id          String                @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice               @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productName String
+  total       Float                 // Sum of all child amounts
+  details     InvoiceItemDetail[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model InvoiceItemDetail {
+  id               String         @id @default(cuid())
+  invoiceItemId    String
+  invoiceItem      InvoiceItem    @relation(fields: [invoiceItemId], references: [id], onDelete: Cascade)
+  detail           String
+  unitPrice        Float
+  qty              Float
+  amount           Float          // unitPrice * qty
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+model InvoiceRemark {
+  id          String    @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  text        String
+  isCompleted Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Expense {
+  id                String              @id @default(cuid())
+  expenseId         String              @unique // EXP-YYYY-NNNN format
+  
+  // Reference to invoice (optional - expenses can be created manually)
+  invoiceId         String?
+  invoice           Invoice?            @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  
+  // Planning reference (if invoice came from planning flow)
+  planningId        String?
+  
+  // Basic info
+  projectName       String
+  productionDate    DateTime            // Required production date
+  clientBudget      Float               @default(0) // Total client budget (auto-filled from planning if available)
+  paidAmount        Float               @default(0) // Amount actually paid by client (from invoice total after tax)
+  
+  // Item totals (for reference)
+  totalItemBudgeted Float               @default(0) // Sum of budgeted from expense items
+  totalItemDifferences Float            @default(0) // Sum of differences from expense items
+  
+  notes             String?
+  status            String              @default("draft") // draft or final
+  
+  items             ExpenseItem[]
+  
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model ExpenseItem {
+  id            String      @id @default(cuid())
+  expenseId     String
+  expense       Expense     @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  productName   String
+  budgeted      Float       // From invoice/planning
+  actual        Float       // Actual expense incurred
+  difference    Float       // budgeted - actual
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Special Cases
+model ParagonTicket {
+  id                String              @id @default(cuid())
+  ticketId          String              @unique // PRG-YYYY-NNNN format
+  quotationId       String              @default("") @unique // QTN-YYYY-NNNN format (from main quotation database)
+  invoiceId         String              @default("") @unique // INV-YYYY-NNNN format (from main invoice database)
+  
+  // Company data (saved from master)
+  companyName       String
+  companyAddress    String
+  companyCity       String
+  companyProvince   String
+  companyPostalCode String?
+  companyTelp       String?
+  companyEmail      String?
+  
+  // Dates
+  productionDate    DateTime
+  quotationDate     DateTime
+  invoiceBastDate   DateTime
+  
+  // Client contact info (instead of billing)
+  billTo            String
+  contactPerson     String
+  contactPosition   String
+  
+  // Signature data (saved from master)
+  signatureName     String
+  signatureRole     String?
+  signatureImageData String
+  
+  // Screenshot final work (for BAST)
+  finalWorkImageData String?           // Base64 image data
+  
+  pph               String // PPh percentage/type
+  totalAmount       Float
+  status            String              @default("draft") // draft, pending, or accepted
+  generatedInvoiceId String?           // ID of auto-generated invoice
+  
+  items             ParagonTicketItem[]
+  remarks           ParagonTicketRemark[]
+  
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model ParagonTicketItem {
+  id          String                @id @default(cuid())
+  ticketId    String
+  ticket      ParagonTicket         @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  productName String
+  total       Float                 // Sum of all child amounts
+  details     ParagonTicketItemDetail[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model ParagonTicketItemDetail {
+  id          String            @id @default(cuid())
+  itemId      String
+  item        ParagonTicketItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  detail      String
+  unitPrice   Float
+  qty         Float
+  amount      Float
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model ParagonTicketRemark {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      ParagonTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  text        String
+  isCompleted Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Erha Special Case
+model ErhaTicket {
+  id                String              @id @default(cuid())
+  ticketId          String              @unique // ERH-YYYY-NNNN format
+  quotationId       String              @default("") @unique // QTN-YYYY-NNNN format (from main quotation database)
+  invoiceId         String              @default("") @unique // INV-YYYY-NNNN format (from main invoice database)
+  
+  // Company data (saved from master)
+  companyName       String
+  companyAddress    String
+  companyCity       String
+  companyProvince   String
+  companyPostalCode String?
+  companyTelp       String?
+  companyEmail      String?
+  
+  // Dates
+  productionDate    DateTime
+  quotationDate     DateTime
+  invoiceBastDate   DateTime
+  
+  // Client contact info
+  billTo            String
+  billToAddress     String              @default("")
+  contactPerson     String
+  contactPosition   String
+  
+  // Billing data (saved from master)
+  billingName       String
+  billingBankName   String
+  billingBankAccount String
+  billingBankAccountName String
+  billingKtp        String?
+  billingNpwp       String?
+  
+  // Signature data (saved from master)
+  signatureName     String
+  signatureRole     String?
+  signatureImageData String
+  
+  // Screenshot final work (for BAST)
+  finalWorkImageData String?           // Base64 image data
+  
+  pph               String // PPh percentage/type
+  totalAmount       Float
+  status            String              @default("draft") // draft, pending, or accepted
+  generatedInvoiceId String?           // ID of auto-generated invoice
+  
+  items             ErhaTicketItem[]
+  remarks           ErhaTicketRemark[]
+  
+  deletedAt         DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model ErhaTicketItem {
+  id          String                @id @default(cuid())
+  ticketId    String
+  ticket      ErhaTicket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  productName String
+  total       Float                 // Sum of all child amounts
+  details     ErhaTicketItemDetail[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model ErhaTicketItemDetail {
+  id          String            @id @default(cuid())
+  itemId      String
+  item        ErhaTicketItem    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  detail      String
+  unitPrice   Float
+  qty         Float
+  amount      Float
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model ErhaTicketRemark {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      ErhaTicket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  text        String
+  isCompleted Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Gear Expenses - Expenses outside of projects
+model GearExpense {
+  id          String    @id @default(cuid())
+  name        String
+  amount      Float
+  date        DateTime? // Optional date of the expense
+  year        Int       // Year the expense belongs to
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Big Expenses - Large expenses outside of projects
+model BigExpense {
+  id          String    @id @default(cuid())
+  name        String
+  amount      Float
+  date        DateTime? // Optional date of the expense
+  year        Int       // Year the expense belongs to
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
