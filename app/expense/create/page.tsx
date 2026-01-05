@@ -133,7 +133,7 @@ export default function CreateExpensePage() {
       
       const payload = {
         projectName: projectName.trim(),
-        productionDate: productionDate.toISOString(),
+        productionDate: productionDate!.toISOString(),
         clientBudget: parseFloat(clientBudget) || 0,
         paidAmount: parseFloat(paidAmount) || 0,
         notes: notes.trim() || null,
@@ -317,7 +317,7 @@ export default function CreateExpensePage() {
     try {
       const payload = {
         projectName: projectName.trim(),
-        productionDate: productionDate.toISOString(),
+        productionDate: productionDate!.toISOString(),
         clientBudget: parseFloat(clientBudget) || 0,
         paidAmount: parseFloat(paidAmount) || 0,
         notes: notes.trim() || null,
