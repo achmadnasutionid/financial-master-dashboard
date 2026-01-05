@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { AutoExpandInput } from "@/components/ui/auto-expand-input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -993,13 +994,12 @@ export default function CreateErhaTicketPage() {
                                 <div className="space-y-2">
                                   {item.details.map((detail) => (
                                     <div key={detail.id} className="grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-2 items-center">
-                                      <Input
+                                      <AutoExpandInput
                                         value={detail.detail}
                                         onChange={(e) =>
                                           updateDetail(item.id, detail.id, "detail", e.target.value)
                                         }
                                         placeholder="Enter detail"
-                                        className="h-9"
                                       />
                                       <CurrencyInput
                                         value={detail.unitPrice}
