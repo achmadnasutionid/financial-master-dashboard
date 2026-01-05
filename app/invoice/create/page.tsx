@@ -82,7 +82,7 @@ export default function CreateInvoicePage() {
   const [billTo, setBillTo] = useState("")
   const [notes, setNotes] = useState("")
   const [remarks, setRemarks] = useState<Remark[]>([
-    { id: "1", text: "Digital Use Use Only & Small Medium Posm Indoor", isCompleted: false },
+    { id: "1", text: "Digital Use, Sosmed and Website Only", isCompleted: false },
     { id: "2", text: "Overtime Production Shooting Day 10 % dari Fee Invoice", isCompleted: false },
     { id: "3", text: "Small Ussage ( Flyer, Katalog, Brosur, Kupon, Kotak Gift, Booklet PR Package, Kartu Ucapan ) 15% dari Invoice awal", isCompleted: false },
     { id: "4", text: "Medium Ussage (POP, TV Store, TV Led Instore, both, bazaar, Backwall, Wobler, add 20%", isCompleted: false },
