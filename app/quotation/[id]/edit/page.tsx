@@ -271,12 +271,14 @@ export default function EditQuotationPage() {
         items: items.map(item => ({
           productName: item.productName,
           total: item.total,
-          details: item.details.map(detail => ({
-            detail: detail.detail,
-            unitPrice: parseFloat(detail.unitPrice) || 0,
-            qty: parseFloat(detail.qty) || 0,
-            amount: detail.amount
-          }))
+          details: item.details
+            .filter(detail => detail.detail.trim() || parseFloat(detail.unitPrice) || parseFloat(detail.qty))
+            .map(detail => ({
+              detail: detail.detail,
+              unitPrice: parseFloat(detail.unitPrice) || 0,
+              qty: parseFloat(detail.qty) || 0,
+              amount: detail.amount
+            }))
         }))
       }
 
@@ -563,12 +565,14 @@ export default function EditQuotationPage() {
         items: items.map(item => ({
           productName: item.productName,
           total: item.total,
-          details: item.details.map(detail => ({
-            detail: detail.detail,
-            unitPrice: parseFloat(detail.unitPrice) || 0,
-            qty: parseFloat(detail.qty) || 0,
-            amount: detail.amount
-          }))
+          details: item.details
+            .filter(detail => detail.detail.trim() || parseFloat(detail.unitPrice) || parseFloat(detail.qty))
+            .map(detail => ({
+              detail: detail.detail,
+              unitPrice: parseFloat(detail.unitPrice) || 0,
+              qty: parseFloat(detail.qty) || 0,
+              amount: detail.amount
+            }))
         }))
       }
 
