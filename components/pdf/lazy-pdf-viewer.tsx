@@ -24,9 +24,10 @@ interface LazyPDFViewerProps {
   children: ReactElement
   className?: string
   style?: React.CSSProperties
+  showToolbar?: boolean
 }
 
-export function LazyPDFViewer({ children, className, style }: LazyPDFViewerProps) {
+export function LazyPDFViewer({ children, className, style, showToolbar = true }: LazyPDFViewerProps) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export function LazyPDFViewer({ children, className, style }: LazyPDFViewerProps
   }
 
   return (
-    <PDFViewer className={className} style={style}>
+    <PDFViewer className={className} style={style} showToolbar={showToolbar}>
       {children}
     </PDFViewer>
   )
