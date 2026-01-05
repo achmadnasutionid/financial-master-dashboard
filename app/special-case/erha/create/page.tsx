@@ -246,8 +246,11 @@ export default function CreateErhaTicketPage() {
 
   const updateItemName = (itemId: string, productName: string) => {
     markInteracted()
+    // Auto-capitalize if not from master data
+    const isFromMasterData = products.includes(productName)
+    const finalName = isFromMasterData ? productName : productName.toUpperCase()
     setItems(items.map(item =>
-      item.id === itemId ? { ...item, productName } : item
+      item.id === itemId ? { ...item, productName: finalName } : item
     ))
   }
 
