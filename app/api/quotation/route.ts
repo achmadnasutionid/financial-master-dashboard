@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { logQuotationToSheets } from "@/lib/google-sheets"
 
 // Helper function to generate Quotation ID in format QTN-YYYY-NNNN
 async function generateQuotationId() {
@@ -131,6 +132,13 @@ export async function POST(request: Request) {
         remarks: true
       }
     })
+
+    // Log to Google Sheets if status is pending or accepted (non-blocking)
+    if (quotation.status === 'pending' || quotation.status === 'accepted') {
+      logQuotationToSheets(quotation).catch(err =>
+        console.error('Failed to log quotation to sheets:', err)
+      )
+    }
 
     return NextResponse.json(quotation, { status: 201 })
   } catch (error) {

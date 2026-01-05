@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { logQuotationToSheets } from "@/lib/google-sheets"
 
 // GET single quotation
 export async function GET(
@@ -52,8 +53,24 @@ export async function PUT(
         where: { id },
         data: {
           status: body.status
+        },
+        include: {
+          items: {
+            include: {
+              details: true
+            }
+          },
+          remarks: true
         }
       })
+      
+      // Log status change to Google Sheets (only if pending or accepted)
+      if (quotation.status === 'pending' || quotation.status === 'accepted') {
+        logQuotationToSheets(quotation).catch(err =>
+          console.error('Failed to log quotation status change to sheets:', err)
+        )
+      }
+      
       return NextResponse.json(quotation)
     }
 
@@ -121,6 +138,13 @@ export async function PUT(
         remarks: true
       }
     })
+
+    // Log to Google Sheets if status is pending or accepted (non-blocking)
+    if (quotation.status === 'pending' || quotation.status === 'accepted') {
+      logQuotationToSheets(quotation).catch(err =>
+        console.error('Failed to log quotation update to sheets:', err)
+      )
+    }
 
     return NextResponse.json(quotation)
   } catch (error) {
