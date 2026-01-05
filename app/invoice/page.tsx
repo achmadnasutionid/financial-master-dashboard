@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, memo, useCallback } from "react"
+import { useEffect, useState, memo, useCallback, Suspense } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { PageHeader } from "@/components/layout/page-header"
 import { Footer } from "@/components/layout/footer"
@@ -49,7 +49,7 @@ interface Invoice {
   }[]
 }
 
-export default function InvoicePage() {
+function InvoicePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [invoices, setInvoices] = useState<Invoice[]>([])
@@ -570,4 +570,10 @@ export default function InvoicePage() {
   )
 }
 
-
+export default function InvoicePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <InvoicePageContent />
+    </Suspense>
+  )
+}

@@ -5,7 +5,7 @@ import { NumericFormat } from "react-number-format"
 import { cn } from "@/lib/utils"
 
 export interface CurrencyInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange"> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "type"> {
   value?: string | number
   onValueChange?: (value: string) => void
   error?: boolean
@@ -32,7 +32,7 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           error && "border-destructive focus-visible:ring-destructive",
           className
         )}
-        {...props}
+        {...(props as any)}
       />
     )
   }

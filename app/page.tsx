@@ -434,11 +434,13 @@ export default function Home() {
     const productArray = Object.entries(productTotals).map(([name, amount]) => ({
       name,
       amount: amount / 1000000, // Convert to millions
+      percentage: 0, // Will be calculated below
     })).sort((a, b) => b.amount - a.amount)
     
     const etcArray = Object.entries(etcTotals).map(([name, amount]) => ({
       name,
       amount: amount / 1000000, // Convert to millions
+      percentage: 0, // Will be calculated below
     })).sort((a, b) => b.amount - a.amount)
     
     // Calculate totals for percentage
@@ -1052,7 +1054,7 @@ export default function Home() {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip 
-                          formatter={(value: number) => `Rp ${value.toFixed(2)} Juta`}
+                          formatter={(value) => `Rp ${Number(value).toFixed(2)} Juta`}
                           contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
                         />
                         <Legend />
@@ -1090,7 +1092,7 @@ export default function Home() {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip 
-                          formatter={(value: number) => `Rp ${value.toFixed(2)} Juta`}
+                          formatter={(value) => `Rp ${Number(value).toFixed(2)} Juta`}
                           contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
                         />
                         <Legend />
@@ -1131,7 +1133,7 @@ export default function Home() {
                         <XAxis dataKey="month" />
                         <YAxis label={{ value: '%', position: 'insideLeft' }} />
                         <Tooltip 
-                          formatter={(value: number) => `${value.toFixed(2)}%`}
+                          formatter={(value) => `${Number(value).toFixed(2)}%`}
                           contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
                         />
                         <Legend />
@@ -1161,7 +1163,7 @@ export default function Home() {
                         <XAxis dataKey="month" />
                         <YAxis />
                         <Tooltip 
-                          formatter={(value: number) => `${value} projects`}
+                          formatter={(value) => `${value} projects`}
                           contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
                         />
                         <Legend />
@@ -1313,8 +1315,8 @@ export default function Home() {
                           <XAxis type="number" />
                           <YAxis dataKey="name" type="category" width={150} />
                           <Tooltip 
-                            formatter={(value: number, name: string, props: any) => [
-                              `Rp ${value.toFixed(2)} Juta (${props.payload.percentage.toFixed(1)}%)`,
+                            formatter={(value, _name, props: any) => [
+                              `Rp ${Number(value).toFixed(2)} Juta (${props.payload.percentage.toFixed(1)}%)`,
                               'Amount'
                             ]}
                             contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
@@ -1445,8 +1447,8 @@ export default function Home() {
                           <XAxis type="number" />
                           <YAxis dataKey="name" type="category" width={150} />
                           <Tooltip 
-                            formatter={(value: number, name: string, props: any) => [
-                              `Rp ${value.toFixed(2)} Juta (${props.payload.percentage.toFixed(1)}%)`,
+                            formatter={(value, _name, props: any) => [
+                              `Rp ${Number(value).toFixed(2)} Juta (${props.payload.percentage.toFixed(1)}%)`,
                               'Amount'
                             ]}
                             contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}

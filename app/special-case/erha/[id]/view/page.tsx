@@ -146,7 +146,7 @@ export default function ViewErhaTicketPage() {
 
         if (response.ok) {
           const updatedTicket = await response.json()
-          setTicket(updatedTicket)
+          mutate()
           toast.success("Screenshot uploaded successfully!")
         } else {
           toast.error("Failed to upload screenshot")

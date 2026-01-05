@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, memo, useCallback } from "react"
+import { useState, useEffect, memo, useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { Footer } from "@/components/layout/footer"
@@ -23,7 +23,7 @@ interface Product {
   updatedAt: string
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [products, setProducts] = useState<Product[]>([])
@@ -528,3 +528,10 @@ export default function ProductsPage() {
   )
 }
 
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <ProductsPageContent />
+    </Suspense>
+  )
+}

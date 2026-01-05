@@ -154,8 +154,8 @@ export default function ViewQuotationPage() {
           description: "Redirecting to invoice edit page..."
         })
         
-        // Update local state
-        setQuotation(prev => prev ? { ...prev, generatedInvoiceId: newInvoice.id } : null)
+        // Revalidate data
+        mutate()
         
         // Redirect to invoice edit page
         router.push(`/invoice/${newInvoice.id}/edit`)
@@ -193,7 +193,7 @@ export default function ViewQuotationPage() {
         })
         
         // Update local state
-        setQuotation(prev => prev ? { ...prev, status: "accepted" } : null)
+        mutate()
       } else {
         const data = await response.json()
         toast.error("Failed to accept quotation", {

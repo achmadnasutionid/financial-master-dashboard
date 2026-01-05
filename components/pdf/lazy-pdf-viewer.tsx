@@ -46,8 +46,8 @@ export function LazyPDFViewer({ children, className, style, showToolbar = true }
   }
 
   return (
-    <PDFViewer className={className} style={style} showToolbar={showToolbar}>
-      {children}
+    <PDFViewer className={className} style={style as any} showToolbar={showToolbar}>
+      {children as any}
     </PDFViewer>
   )
 }
