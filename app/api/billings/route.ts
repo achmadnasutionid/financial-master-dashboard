@@ -13,7 +13,12 @@ export async function GET(request: Request) {
         createdAt: "desc"
       }
     })
-    return NextResponse.json(billings)
+    // Cache master data for 60 seconds (rarely changes)
+    return NextResponse.json(billings, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    })
   } catch (error) {
     console.error("Error fetching billings:", error)
     return NextResponse.json(

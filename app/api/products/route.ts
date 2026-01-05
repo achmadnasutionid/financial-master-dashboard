@@ -50,7 +50,13 @@ export async function GET(request: Request) {
         createdAt: "asc" // Keep default order
       }
     })
-    return NextResponse.json(products)
+    
+    // Cache master data for 60 seconds (rarely changes)
+    return NextResponse.json(products, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    })
   } catch (error) {
     console.error("Error fetching products:", error)
     return NextResponse.json(

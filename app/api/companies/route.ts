@@ -13,7 +13,12 @@ export async function GET(request: Request) {
         createdAt: "desc"
       }
     })
-    return NextResponse.json(companies)
+    // Cache master data for 60 seconds (rarely changes)
+    return NextResponse.json(companies, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    })
   } catch (error) {
     console.error("Error fetching companies:", error)
     return NextResponse.json(
