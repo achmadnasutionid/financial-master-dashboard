@@ -48,6 +48,7 @@ interface Billing {
 interface Signature {
   id: string
   name: string
+  role?: string
   imageData: string
 }
 
