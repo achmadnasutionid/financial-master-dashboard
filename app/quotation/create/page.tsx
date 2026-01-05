@@ -540,7 +540,7 @@ export default function CreateQuotationPage() {
                     <DatePicker date={productionDate} onDateChange={(date) => {
                       markInteracted()
                       setProductionDate(date)
-                      if (errors.productionDate) validateField("productionDate", date)
+                      if (errors.productionDate) validateField("productionDate", date || null)
                     }} error={!!errors.productionDate} />
                     {errors.productionDate && (
                       <p className="text-sm text-destructive">{errors.productionDate}</p>

@@ -632,7 +632,7 @@ export default function CreateErhaTicketPage() {
                     <DatePicker date={productionDate} onDateChange={(date) => {
                       markInteracted()
                       setProductionDate(date)
-                      if (errors.productionDate) validateField("productionDate", date)
+                      if (errors.productionDate) validateField("productionDate", date || null)
                     }} error={!!errors.productionDate} />
                     {errors.productionDate && (
                       <p className="text-sm text-destructive">{errors.productionDate}</p>
@@ -646,7 +646,7 @@ export default function CreateErhaTicketPage() {
                     <DatePicker date={quotationDate} onDateChange={(date) => {
                       markInteracted()
                       setQuotationDate(date)
-                      if (errors.quotationDate) validateField("quotationDate", date)
+                      if (errors.quotationDate) validateField("quotationDate", date || null)
                     }} error={!!errors.quotationDate} />
                     {errors.quotationDate && (
                       <p className="text-sm text-destructive">{errors.quotationDate}</p>
@@ -658,7 +658,7 @@ export default function CreateErhaTicketPage() {
                     <DatePicker date={invoiceBastDate} onDateChange={(date) => {
                       markInteracted()
                       setInvoiceBastDate(date)
-                      if (errors.invoiceBastDate) validateField("invoiceBastDate", date)
+                      if (errors.invoiceBastDate) validateField("invoiceBastDate", date || null)
                     }} error={!!errors.invoiceBastDate} />
                     {errors.invoiceBastDate && (
                       <p className="text-sm text-destructive">{errors.invoiceBastDate}</p>

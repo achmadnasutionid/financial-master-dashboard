@@ -483,7 +483,7 @@ export default function EditExpensePage() {
                             onDateChange={(date) => {
                               markInteracted()
                               setProductionDate(date || null)
-                              if (errors.productionDate) validateField("productionDate", date)
+                              if (errors.productionDate) validateField("productionDate", date || null)
                               if (date) {
                                 const day = date.getDate().toString().padStart(2, '0')
                                 const month = (date.getMonth() + 1).toString().padStart(2, '0')
