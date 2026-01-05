@@ -324,7 +324,7 @@ export default function ViewErhaTicketPage() {
               {viewType === 'bast' && (
                 <PDFDownloadLink
                   document={<ErhaBASTPDF data={ticket} />}
-                  fileName={`BAST_${ticket.ticketId}_${ticket.billTo.replace(/\s+/g, "_")}.pdf`}
+                  fileName={`${ticket.ticketId}_bast_${ticket.billTo.replace(/\s+/g, "_")}.pdf`}
                 >
                   {({ loading: pdfLoading }) => (
                     <Button size="sm" disabled={pdfLoading}>
