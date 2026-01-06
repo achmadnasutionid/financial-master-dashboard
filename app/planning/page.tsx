@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, memo, useCallback } from "react"
+import { useEffect, useState, memo, useCallback, Suspense } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { PageHeader } from "@/components/layout/page-header"
 import { Footer } from "@/components/layout/footer"
@@ -62,7 +62,7 @@ interface Planning {
   updatedAt: string
 }
 
-export default function PlanningPage() {
+function PlanningPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [plannings, setPlannings] = useState<Planning[]>([])
@@ -667,6 +667,14 @@ export default function PlanningPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function PlanningPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <PlanningPageContent />
+    </Suspense>
   )
 }
 

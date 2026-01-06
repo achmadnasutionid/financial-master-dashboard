@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, memo, useCallback } from "react"
+import { useEffect, useState, memo, useCallback, Suspense } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/page-header"
@@ -53,7 +53,7 @@ interface Expense {
   updatedAt: string
 }
 
-export default function ExpensePage() {
+function ExpensePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -515,6 +515,14 @@ export default function ExpensePage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function ExpensePage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+      <ExpensePageContent />
+    </Suspense>
   )
 }
 
