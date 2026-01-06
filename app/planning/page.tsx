@@ -11,7 +11,7 @@ import { ListCardSkeleton } from "@/components/ui/skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Pagination } from "@/components/ui/pagination"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -64,6 +64,7 @@ interface Planning {
 
 export default function PlanningPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [plannings, setPlannings] = useState<Planning[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -92,7 +93,7 @@ export default function PlanningPage() {
       if (statusFilter !== "all") params.append("status", statusFilter)
       params.append("sortBy", sortBy)
 
-      const response = await fetch(`/api/planning?${params}`)
+      const response = await fetch(`/api/planning?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setPlannings(data)
@@ -107,6 +108,21 @@ export default function PlanningPage() {
   useEffect(() => {
     fetchPlannings()
   }, [statusFilter, sortBy])
+
+  // Check for refresh parameter - show loading and refetch
+  useEffect(() => {
+    const refreshParam = searchParams.get("refresh")
+    if (refreshParam === "true") {
+      // Show loading while fetching fresh data
+      setLoading(true)
+      fetchPlannings().then(() => {
+        // Remove the refresh param from URL after data is loaded
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("refresh")
+        window.history.replaceState({}, '', newUrl.toString())
+      })
+    }
+  }, [searchParams])
 
   // Fetch master data when dialog opens
   useEffect(() => {
@@ -130,33 +146,27 @@ export default function PlanningPage() {
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return
 
+    setIsDeleting(true)
     const idToDelete = deleteId
-    
-    // Optimistic update: remove from UI immediately
-    const previousPlannings = [...plannings]
-    setPlannings(plannings.filter((p) => p.id !== idToDelete))
     setDeleteId(null)
 
-    setIsDeleting(true)
     try {
       const response = await fetch(`/api/planning/${idToDelete}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchPlannings()
         toast.success("Planning deleted", {
           description: "The planning has been removed."
         })
       } else {
-        // Revert optimistic update on error
-        setPlannings(previousPlannings)
         toast.error("Failed to delete planning", {
           description: "An error occurred while deleting."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setPlannings(previousPlannings)
       console.error("Error deleting planning:", error)
       toast.error("Failed to delete planning", {
         description: "An unexpected error occurred."

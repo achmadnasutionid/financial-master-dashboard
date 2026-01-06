@@ -56,6 +56,7 @@ export default function EditPlanningPage() {
   const [hasInteracted, setHasInteracted] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle")
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [planningNumber, setPlanningNumber] = useState<string>("")
   const [planningStatus, setPlanningStatus] = useState<string>("")
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false)
 
@@ -71,10 +72,11 @@ export default function EditPlanningPage() {
           toast.error("Cannot edit finalized planning", {
             description: "This planning has been finalized and cannot be edited."
           })
-          router.push("/planning")
+          router.push("/planning?refresh=true")
           return
         }
 
+        setPlanningNumber(data.planningId)
         setPlanningStatus(data.status)
         setProjectName(data.projectName)
         setClientName(data.clientName)
@@ -334,7 +336,7 @@ export default function EditPlanningPage() {
         if (status === "final") {
           router.push(`/planning/${planningId}/view`)
         } else {
-          router.push("/planning")
+          router.push("/planning?refresh=true")
         }
       } else {
         const data = await response.json()
@@ -394,7 +396,7 @@ export default function EditPlanningPage() {
         <div className="container mx-auto max-w-5xl space-y-6">
           <Breadcrumb items={[
             { label: "Planning", href: "/planning" },
-            { label: planningId || "Edit" }
+            { label: planningNumber || "Edit" }
           ]} />
           <Card>
             <CardContent className="space-y-6 pt-6">

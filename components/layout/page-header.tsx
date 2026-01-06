@@ -42,7 +42,19 @@ export function PageHeader({ title, showBackButton = false, backTo = "/" }: Page
   }
 
   const handleBack = () => {
-    router.push(backTo)
+    // Add refresh=true parameter for list pages to ensure fresh data
+    const listPages = ['/quotation', '/invoice', '/planning', '/expense', '/special-case/paragon', '/special-case/erha']
+    const isListPage = listPages.some(page => backTo.startsWith(page))
+    
+    if (isListPage && !backTo.includes('?')) {
+      router.push(`${backTo}?refresh=true`)
+    } else if (isListPage && backTo.includes('?')) {
+      router.push(`${backTo}&refresh=true`)
+    } else {
+      router.push(backTo)
+    }
+    // Force Next.js to refresh the page data
+    router.refresh()
   }
 
   if (!mounted) {

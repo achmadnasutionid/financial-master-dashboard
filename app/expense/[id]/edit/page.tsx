@@ -46,6 +46,7 @@ export default function EditExpensePage() {
   const [paidAmount, setPaidAmount] = useState("")
   const [notes, setNotes] = useState("")
   const [items, setItems] = useState<ExpenseItem[]>([])
+  const [expenseNumber, setExpenseNumber] = useState<string>("")
   const [expenseStatus, setExpenseStatus] = useState<string>("")
   const [products, setProducts] = useState<string[]>([])
   const [hasInvoice, setHasInvoice] = useState(false) // Track if expense comes from invoice
@@ -74,10 +75,11 @@ export default function EditExpensePage() {
           toast.error("Cannot edit finalized expense", {
             description: "This expense has been finalized and cannot be edited."
           })
-          router.push("/expense")
+          router.push("/expense?refresh=true")
           return
         }
 
+        setExpenseNumber(data.expenseId)
         setExpenseStatus(data.status)
         setProjectName(data.projectName)
         setProductionDate(data.productionDate ? new Date(data.productionDate) : null)
@@ -373,7 +375,7 @@ export default function EditExpensePage() {
         if (status === "final") {
           router.push(`/expense/${expenseId}/view`)
         } else {
-          router.push("/expense")
+          router.push("/expense?refresh=true")
         }
       } else {
         const data = await response.json()
@@ -431,7 +433,7 @@ export default function EditExpensePage() {
         <div className="container mx-auto max-w-5xl space-y-6">
           <Breadcrumb items={[
             { label: "Expenses", href: "/expense" },
-            { label: expenseId || "Edit" }
+            { label: expenseNumber || "Edit" }
           ]} />
           <Card>
             <CardContent className="space-y-6 pt-6">

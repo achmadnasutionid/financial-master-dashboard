@@ -94,7 +94,7 @@ export default function CreateParagonTicketPage() {
     }
   ])
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   const [finalWorkImage, setFinalWorkImage] = useState<string>("")
   
@@ -758,7 +758,7 @@ export default function CreateParagonTicketPage() {
                     <Select value={pph} onValueChange={(value) => {
                       markInteracted()
                       setPph(value)
-                    }}>
+                    }} disabled>
                       <SelectTrigger>
                         <SelectValue placeholder="Select PPh" />
                       </SelectTrigger>

@@ -74,7 +74,7 @@ function ErhaTicketPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter)
       params.append("sortBy", sortBy)
 
-      const response = await fetch(`/api/erha?${params}`)
+      const response = await fetch(`/api/erha?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setTickets(data)
@@ -90,6 +90,21 @@ function ErhaTicketPageContent() {
     fetchTickets()
   }, [statusFilter, sortBy])
 
+  // Check for refresh parameter - show loading and refetch
+  useEffect(() => {
+    const refreshParam = searchParams.get("refresh")
+    if (refreshParam === "true") {
+      // Show loading while fetching fresh data
+      setLoading(true)
+      fetchTickets().then(() => {
+        // Remove the refresh param from URL after data is loaded
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("refresh")
+        window.history.replaceState({}, '', newUrl.toString())
+      })
+    }
+  }, [searchParams])
+
   const [isDeleting, setIsDeleting] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const ITEMS_PER_PAGE = 12
@@ -97,33 +112,27 @@ function ErhaTicketPageContent() {
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return
 
+    setIsDeleting(true)
     const idToDelete = deleteId
-    
-    // Optimistic update: remove from UI immediately
-    const previousTickets = [...tickets]
-    setTickets(tickets.filter((t) => t.id !== idToDelete))
     setDeleteId(null)
 
-    setIsDeleting(true)
     try {
       const response = await fetch(`/api/erha/${idToDelete}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchTickets()
         toast.success("Erha ticket deleted", {
           description: "The ticket has been removed."
         })
       } else {
-        // Revert optimistic update on error
-        setTickets(previousTickets)
         toast.error("Failed to delete erha ticket", {
           description: "An error occurred while deleting."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setTickets(previousTickets)
       console.error("Error deleting erha ticket:", error)
       toast.error("Failed to delete erha ticket", {
         description: "An unexpected error occurred."

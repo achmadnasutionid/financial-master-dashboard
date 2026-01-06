@@ -116,7 +116,7 @@ export default function CreateErhaTicketPage() {
   ])
   const [selectedBillingId, setSelectedBillingId] = useState("")
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   const [finalWorkImage, setFinalWorkImage] = useState<string>("")
   
@@ -872,7 +872,7 @@ export default function CreateErhaTicketPage() {
                     <Select value={pph} onValueChange={(value) => {
                       markInteracted()
                       setPph(value)
-                    }}>
+                    }} disabled>
                       <SelectTrigger>
                         <SelectValue placeholder="Select PPh" />
                       </SelectTrigger>

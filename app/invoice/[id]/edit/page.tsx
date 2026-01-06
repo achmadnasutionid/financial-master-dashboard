@@ -87,7 +87,7 @@ export default function EditInvoicePage() {
   const [remarks, setRemarks] = useState<Remark[]>([])
   const [selectedBillingId, setSelectedBillingId] = useState("")
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   
   // Master data
@@ -100,6 +100,7 @@ export default function EditInvoicePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<any>({})
+  const [invoiceNumber, setInvoiceNumber] = useState<string>("")
   const [InvoiceStatus, setInvoiceStatus] = useState<string>("")
   const [hasInteracted, setHasInteracted] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle")
@@ -121,10 +122,11 @@ export default function EditInvoicePage() {
         toast.error("Cannot edit paid Invoice", {
           description: "This Invoice has been paid and cannot be edited."
         })
-        router.push("/invoice")
+        router.push("/invoice?refresh=true")
         return
       }
 
+      setInvoiceNumber(InvoiceData.invoiceId)
       setInvoiceStatus(InvoiceData.status)
       
       // Find company by name
@@ -592,7 +594,7 @@ export default function EditInvoicePage() {
         if (status === "pending") {
           router.push(`/invoice/${InvoiceId}/view`)
         } else {
-          router.push("/invoice")
+          router.push("/invoice?refresh=true")
         }
       } else {
         const data = await response.json()
@@ -650,7 +652,7 @@ export default function EditInvoicePage() {
         <div className="container mx-auto max-w-5xl space-y-6">
           <Breadcrumb items={[
             { label: "Invoices", href: "/invoice" },
-            { label: InvoiceId || "Edit" }
+            { label: invoiceNumber || "Edit" }
           ]} />
           <Card>
             <CardContent className="space-y-6 pt-6">
@@ -830,7 +832,7 @@ export default function EditInvoicePage() {
                   <Select value={pph} onValueChange={(value) => {
                     markInteracted()
                     setPph(value)
-                  }}>
+                  }} disabled>
                     <SelectTrigger>
                       <SelectValue placeholder="Select PPh" />
                     </SelectTrigger>

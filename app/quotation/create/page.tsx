@@ -92,7 +92,7 @@ export default function CreateQuotationPage() {
   ])
   const [selectedBillingId, setSelectedBillingId] = useState("")
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   
   // Master data
@@ -473,7 +473,7 @@ export default function CreateQuotationPage() {
           if (status === "pending") {
             router.push(`/quotation/${data.id}/view`)
           } else {
-            router.push("/quotation")
+            router.push("/quotation?refresh=true") // Signal to refresh
           }
         } else {
           setAutoSaveStatus("saved")
@@ -689,7 +689,7 @@ export default function CreateQuotationPage() {
                   <Select value={pph} onValueChange={(value) => {
                     markInteracted()
                     setPph(value)
-                  }}>
+                  }} disabled>
                     <SelectTrigger>
                       <SelectValue placeholder="Select PPh" />
                     </SelectTrigger>

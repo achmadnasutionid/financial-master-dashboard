@@ -348,7 +348,7 @@ export default function CreateExpensePage() {
         if (status === "final") {
           router.push(`/expense/${data.id}/view`)
         } else {
-          router.push("/expense")
+          router.push("/expense?refresh=true")
         }
       } else {
         const data = await response.json()

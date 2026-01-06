@@ -2,7 +2,7 @@
 
 import { useEffect, useState, memo, useCallback } from "react"
 import { useDebounce } from "@/hooks/use-debounce"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { PageHeader } from "@/components/layout/page-header"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
@@ -55,6 +55,7 @@ interface Expense {
 
 export default function ExpensePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -72,7 +73,7 @@ export default function ExpensePage() {
       if (statusFilter !== "all") params.append("status", statusFilter)
       params.append("sortBy", sortBy)
 
-      const response = await fetch(`/api/expense?${params}`)
+      const response = await fetch(`/api/expense?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setExpenses(data)
@@ -104,6 +105,21 @@ export default function ExpensePage() {
     fetchExpenses()
   }, [statusFilter, sortBy])
 
+  // Check for refresh parameter - show loading and refetch
+  useEffect(() => {
+    const refreshParam = searchParams.get("refresh")
+    if (refreshParam === "true") {
+      // Show loading while fetching fresh data
+      setLoading(true)
+      fetchExpenses().then(() => {
+        // Remove the refresh param from URL after data is loaded
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("refresh")
+        window.history.replaceState({}, '', newUrl.toString())
+      })
+    }
+  }, [searchParams])
+
   useEffect(() => {
     fetchAvailableYears()
   }, [])
@@ -115,33 +131,27 @@ export default function ExpensePage() {
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return
 
+    setIsDeleting(true)
     const idToDelete = deleteId
-    
-    // Optimistic update: remove from UI immediately
-    const previousExpenses = [...expenses]
-    setExpenses(expenses.filter((e) => e.id !== idToDelete))
     setDeleteId(null)
 
-    setIsDeleting(true)
     try {
       const response = await fetch(`/api/expense/${idToDelete}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchExpenses()
         toast.success("Expense deleted", {
           description: "The expense has been removed."
         })
       } else {
-        // Revert optimistic update on error
-        setExpenses(previousExpenses)
         toast.error("Failed to delete expense", {
           description: "An error occurred while deleting."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setExpenses(previousExpenses)
       console.error("Error deleting expense:", error)
       toast.error("Failed to delete expense", {
         description: "An unexpected error occurred."

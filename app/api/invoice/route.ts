@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { logInvoiceToSheets } from "@/lib/google-sheets"
 
 // Helper function to generate Invoice ID in format INV-YYYY-NNNN
 async function generateInvoiceId() {
@@ -132,6 +133,13 @@ export async function POST(request: Request) {
         remarks: true
       }
     })
+
+    // Log to Google Sheets if status is pending or paid (non-blocking)
+    if (invoice.status === 'pending' || invoice.status === 'paid') {
+      logInvoiceToSheets(invoice).catch(err =>
+        console.error('Failed to log invoice to sheets:', err)
+      )
+    }
 
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {

@@ -163,9 +163,26 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    
+    // Get quotation data before deletion for Google Sheets logging
+    const quotation = await prisma.quotation.findUnique({
+      where: { id },
+      select: {
+        quotationId: true,
+        productionDate: true,
+      }
+    });
+
+    // Delete the quotation
     await prisma.quotation.delete({
       where: { id }
     })
+
+    // Delete row from Google Sheets
+    if (quotation) {
+      const { deleteQuotationFromSheets } = await import('@/lib/google-sheets');
+      await deleteQuotationFromSheets(quotation.quotationId, quotation.productionDate);
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

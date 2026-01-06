@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { logInvoiceToSheets, deleteInvoiceFromSheets } from "@/lib/google-sheets"
 
 // GET single invoice
 export async function GET(
@@ -52,8 +53,23 @@ export async function PUT(
         where: { id },
         data: {
           status: body.status
+        },
+        include: {
+          items: {
+            include: {
+              details: true
+            }
+          }
         }
       })
+      
+      // Log to Google Sheets if status is pending or paid
+      if (invoice.status === 'pending' || invoice.status === 'paid') {
+        logInvoiceToSheets(invoice).catch(err =>
+          console.error('Failed to log invoice to sheets:', err)
+        )
+      }
+      
       return NextResponse.json(invoice)
     }
 
@@ -123,6 +139,13 @@ export async function PUT(
       }
     })
 
+    // Log to Google Sheets if status is pending or paid (non-blocking)
+    if (invoice.status === 'pending' || invoice.status === 'paid') {
+      logInvoiceToSheets(invoice).catch(err =>
+        console.error('Failed to log invoice to sheets:', err)
+      )
+    }
+
     return NextResponse.json(invoice)
   } catch (error) {
     console.error("Error updating invoice:", error)
@@ -140,9 +163,27 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    
+    // Get invoice data before deletion for Google Sheets logging
+    const invoice = await prisma.invoice.findUnique({
+      where: { id },
+      select: {
+        invoiceId: true,
+        productionDate: true,
+      }
+    });
+
+    // Delete the invoice
     await prisma.invoice.delete({
       where: { id }
     })
+
+    // Delete row from Google Sheets
+    if (invoice) {
+      deleteInvoiceFromSheets(invoice.invoiceId, invoice.productionDate).catch(err =>
+        console.error('Failed to delete invoice from sheets:', err)
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

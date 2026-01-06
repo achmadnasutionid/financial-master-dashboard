@@ -70,6 +70,19 @@ function QuotationPageContent() {
     if (statusParam && ["draft", "pending", "accepted"].includes(statusParam)) {
       setStatusFilter(statusParam)
     }
+    
+    // Check for refresh parameter - show loading and refetch
+    const refreshParam = searchParams.get("refresh")
+    if (refreshParam === "true") {
+      // Show loading while fetching fresh data
+      setLoading(true)
+      fetchQuotations().then(() => {
+        // Remove the refresh param from URL after data is loaded
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("refresh")
+        window.history.replaceState({}, '', newUrl.toString())
+      })
+    }
   }, [searchParams])
 
   const fetchQuotations = async () => {
@@ -78,7 +91,7 @@ function QuotationPageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter)
       params.append("sortBy", sortBy)
 
-      const response = await fetch(`/api/quotation?${params}`)
+      const response = await fetch(`/api/quotation?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setQuotations(data)
@@ -101,33 +114,27 @@ function QuotationPageContent() {
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return
 
+    setIsDeleting(true)
     const idToDelete = deleteId
-    
-    // Optimistic update: remove from UI immediately
-    const previousQuotations = [...quotations]
-    setQuotations(quotations.filter((q) => q.id !== idToDelete))
     setDeleteId(null)
 
-    setIsDeleting(true)
     try {
       const response = await fetch(`/api/quotation/${idToDelete}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchQuotations()
         toast.success("Quotation deleted", {
           description: "The quotation has been removed."
         })
       } else {
-        // Revert optimistic update on error
-        setQuotations(previousQuotations)
         toast.error("Failed to delete quotation", {
           description: "An error occurred while deleting."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setQuotations(previousQuotations)
       console.error("Error deleting quotation:", error)
       toast.error("Failed to delete quotation", {
         description: "An unexpected error occurred."
@@ -140,12 +147,6 @@ function QuotationPageContent() {
   const handleAccept = async (quotationId: string) => {
     if (accepting) return
     
-    // Optimistic update: update status immediately
-    const previousQuotations = [...quotations]
-    setQuotations(quotations.map(q => 
-      q.id === quotationId ? { ...q, status: "accepted" } : q
-    ))
-    
     setAccepting(quotationId)
     try {
       const response = await fetch(`/api/quotation/${quotationId}`, {
@@ -155,19 +156,17 @@ function QuotationPageContent() {
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchQuotations()
         toast.success("Quotation accepted", {
           description: "The quotation has been marked as accepted."
         })
       } else {
-        // Revert optimistic update on error
-        setQuotations(previousQuotations)
         toast.error("Failed to accept quotation", {
           description: "An error occurred while updating status."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setQuotations(previousQuotations)
       console.error("Error accepting quotation:", error)
       toast.error("Failed to accept quotation", {
         description: "An unexpected error occurred."

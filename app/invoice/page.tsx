@@ -68,6 +68,19 @@ function InvoicePageContent() {
     if (statusParam && ["draft", "pending", "paid"].includes(statusParam)) {
       setStatusFilter(statusParam)
     }
+    
+    // Check for refresh parameter - show loading and refetch
+    const refreshParam = searchParams.get("refresh")
+    if (refreshParam === "true") {
+      // Show loading while fetching fresh data
+      setLoading(true)
+      fetchInvoices().then(() => {
+        // Remove the refresh param from URL after data is loaded
+        const newUrl = new URL(window.location.href)
+        newUrl.searchParams.delete("refresh")
+        window.history.replaceState({}, '', newUrl.toString())
+      })
+    }
   }, [searchParams])
 
   const fetchInvoices = async () => {
@@ -76,7 +89,7 @@ function InvoicePageContent() {
       if (statusFilter !== "all") params.append("status", statusFilter)
       params.append("sortBy", sortBy)
 
-      const response = await fetch(`/api/invoice?${params}`)
+      const response = await fetch(`/api/invoice?${params}`, { cache: 'no-store' })
       if (response.ok) {
         const data = await response.json()
         setInvoices(data)
@@ -99,33 +112,27 @@ function InvoicePageContent() {
   const handleDelete = async () => {
     if (!deleteId || isDeleting) return
 
+    setIsDeleting(true)
     const idToDelete = deleteId
-    
-    // Optimistic update: remove from UI immediately
-    const previousInvoices = [...invoices]
-    setInvoices(invoices.filter((q) => q.id !== idToDelete))
     setDeleteId(null)
 
-    setIsDeleting(true)
     try {
       const response = await fetch(`/api/invoice/${idToDelete}`, {
         method: "DELETE",
       })
 
       if (response.ok) {
+        // Refresh the list FIRST, THEN show success toast
+        await fetchInvoices()
         toast.success("Invoice deleted", {
           description: "The invoice has been removed."
         })
       } else {
-        // Revert optimistic update on error
-        setInvoices(previousInvoices)
         toast.error("Failed to delete invoice", {
           description: "An error occurred while deleting."
         })
       }
     } catch (error) {
-      // Revert optimistic update on error
-      setInvoices(previousInvoices)
       console.error("Error deleting invoice:", error)
       toast.error("Failed to delete invoice", {
         description: "An unexpected error occurred."

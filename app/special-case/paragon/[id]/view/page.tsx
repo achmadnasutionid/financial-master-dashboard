@@ -151,7 +151,7 @@ export default function ViewParagonTicketPage() {
           description: `Expense ${data.expense.expenseId} has been created.`
         })
         // Redirect to list page
-        router.push("/special-case/paragon")
+        router.push("/special-case/paragon?refresh=true")
       } else {
         const errorData = await response.json()
         toast.error("Failed to finalize ticket", {

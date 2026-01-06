@@ -87,7 +87,7 @@ export default function EditQuotationPage() {
   const [remarks, setRemarks] = useState<Remark[]>([])
   const [selectedBillingId, setSelectedBillingId] = useState("")
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   
   // Master data
@@ -100,6 +100,7 @@ export default function EditQuotationPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<any>({})
+  const [quotationNumber, setQuotationNumber] = useState<string>("")
   const [quotationStatus, setQuotationStatus] = useState<string>("")
   const [hasInteracted, setHasInteracted] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle")
@@ -125,6 +126,7 @@ export default function EditQuotationPage() {
         return
       }
 
+      setQuotationNumber(quotationData.quotationId)
       setQuotationStatus(quotationData.status)
       
       // Find company by name
@@ -595,7 +597,7 @@ export default function EditQuotationPage() {
         if (status === "pending") {
           router.push(`/quotation/${quotationId}/view`)
         } else {
-          router.push("/quotation")
+          router.push("/quotation?refresh=true") // Signal to refresh
         }
       } else {
         const data = await response.json()
@@ -653,7 +655,7 @@ export default function EditQuotationPage() {
         <div className="container mx-auto max-w-5xl space-y-6">
           <Breadcrumb items={[
             { label: "Quotations", href: "/quotation" },
-            { label: quotationId || "Edit" }
+            { label: quotationNumber || "Edit" }
           ]} />
           <Card>
             <CardContent className="space-y-6 pt-6">
@@ -833,7 +835,7 @@ export default function EditQuotationPage() {
                   <Select value={pph} onValueChange={(value) => {
                     markInteracted()
                     setPph(value)
-                  }}>
+                  }} disabled>
                     <SelectTrigger>
                       <SelectValue placeholder="Select PPh" />
                     </SelectTrigger>

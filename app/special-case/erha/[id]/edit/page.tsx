@@ -92,7 +92,7 @@ export default function EditErhaTicketPage() {
   const [remarks, setRemarks] = useState<Remark[]>([])
   const [selectedBillingId, setSelectedBillingId] = useState("")
   const [selectedSignatureId, setSelectedSignatureId] = useState("")
-  const [pph, setPph] = useState("0")
+  const [pph, setPph] = useState("2") // Auto-select PPH 23 2%
   const [items, setItems] = useState<Item[]>([])
   const [finalWorkImage, setFinalWorkImage] = useState<string>("")
   const [currentStatus, setCurrentStatus] = useState<string>("draft")
@@ -107,6 +107,7 @@ export default function EditErhaTicketPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<any>({})
+  const [ticketNumber, setTicketNumber] = useState<string>("")
   const [hasInteracted, setHasInteracted] = useState(false)
   const [autoSaveStatus, setAutoSaveStatus] = useState<AutoSaveStatus>("idle")
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -126,6 +127,7 @@ export default function EditErhaTicketPage() {
       setProducts(productsData.map((p: any) => p.name))
       
       // Populate form with existing ticket data
+      setTicketNumber(ticketData.ticketId)
       setCurrentStatus(ticketData.status)
       setProductionDate(new Date(ticketData.productionDate))
       setQuotationDate(new Date(ticketData.quotationDate))
@@ -587,7 +589,7 @@ export default function EditErhaTicketPage() {
           setTimeout(() => setAutoSaveStatus("idle"), 3000)
         } else {
           toast.success(`Ticket ${status === "final" ? "finalized" : "saved as draft"} successfully!`)
-          router.push("/special-case/erha")
+          router.push("/special-case/erha?refresh=true")
         }
       } else {
         const errorData = await response.json()
@@ -642,7 +644,7 @@ export default function EditErhaTicketPage() {
         <div className="container mx-auto max-w-5xl space-y-6">
           <Breadcrumb items={[
             { label: "Erha Tickets", href: "/special-case/erha" },
-            { label: ticketId || "Edit" }
+            { label: ticketNumber || "Edit" }
           ]} />
           <Card>
             <CardContent className="space-y-6 pt-6">
@@ -912,7 +914,7 @@ export default function EditErhaTicketPage() {
                     <Select value={pph} onValueChange={(value) => {
                       markInteracted()
                       setPph(value)
-                    }}>
+                    }} disabled>
                       <SelectTrigger>
                         <SelectValue placeholder="Select PPh" />
                       </SelectTrigger>
