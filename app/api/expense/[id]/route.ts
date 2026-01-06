@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { logExpenseToSheets, deleteExpenseFromSheets } from "@/lib/google-sheets"
 
 // GET single expense
 export async function GET(
@@ -47,8 +48,19 @@ export async function PUT(
         where: { id },
         data: {
           status: body.status
+        },
+        include: {
+          items: true
         }
       })
+      
+      // Log to Google Sheets if status is final
+      if (expense.status === 'final') {
+        logExpenseToSheets(expense).catch(err =>
+          console.error('Failed to log expense to sheets:', err)
+        )
+      }
+      
       return NextResponse.json(expense)
     }
 
@@ -80,6 +92,13 @@ export async function PUT(
       }
     })
 
+    // Log to Google Sheets if status is final (non-blocking)
+    if (expense.status === 'final') {
+      logExpenseToSheets(expense).catch(err =>
+        console.error('Failed to log expense to sheets:', err)
+      )
+    }
+
     return NextResponse.json(expense)
   } catch (error) {
     console.error("Error updating expense:", error)
@@ -97,9 +116,27 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    
+    // Get expense data before deletion for Google Sheets logging
+    const expense = await prisma.expense.findUnique({
+      where: { id },
+      select: {
+        expenseId: true,
+        productionDate: true,
+      }
+    });
+
+    // Delete the expense
     await prisma.expense.delete({
       where: { id }
     })
+
+    // Delete row from Google Sheets
+    if (expense) {
+      deleteExpenseFromSheets(expense.expenseId, expense.productionDate).catch(err =>
+        console.error('Failed to delete expense from sheets:', err)
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

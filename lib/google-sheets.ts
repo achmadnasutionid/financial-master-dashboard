@@ -1012,3 +1012,414 @@ export async function deleteInvoiceFromSheets(invoiceId: string, productionDate:
   }
 }
 
+// ============================================
+// EXPENSE LOGGING FUNCTIONS
+// ============================================
+
+// Ensure EXPENSE sheet exists with proper headers
+async function ensureExpenseSheetExists(sheets: any, spreadsheetId: string, year: number) {
+  const sheetName = `EXPENSE ${year}`;
+  
+  try {
+    const response = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheetExists = response.data.sheets.some(
+      (sheet: any) => sheet.properties.title === sheetName
+    );
+
+    if (!sheetExists) {
+      // Create sheet
+      const createResponse = await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: {
+                  title: sheetName,
+                },
+              },
+            },
+          ],
+        },
+      });
+      
+      console.log(`Created new sheet: ${sheetName}`);
+      
+      const newSheetId = createResponse.data.replies[0].addSheet.properties.sheetId;
+
+      // Get all products for expense tracking
+      const products = await getAllProducts();
+      const headers = [
+        'ID',
+        'Project Name',
+        'Status',
+        'Date',
+        'Total Expense',
+        ...products
+      ];
+
+      // Add header row
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!A1:ZZ1`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [headers],
+        },
+      });
+
+      // Format header row (same styling as quotation/invoice)
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              repeatCell: {
+                range: {
+                  sheetId: newSheetId,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 0,
+                  endColumnIndex: 4,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    textFormat: { bold: true, fontSize: 10 },
+                    backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
+                    wrapStrategy: 'CLIP',
+                    verticalAlignment: 'MIDDLE',
+                  },
+                },
+                fields: 'userEnteredFormat(textFormat,backgroundColor,wrapStrategy,verticalAlignment)',
+              },
+            },
+            {
+              repeatCell: {
+                range: {
+                  sheetId: newSheetId,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 4,
+                  endColumnIndex: 5,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    textFormat: { bold: true, fontSize: 10 },
+                    backgroundColor: { red: 0.8, green: 0.9, blue: 1.0 },
+                    wrapStrategy: 'CLIP',
+                    verticalAlignment: 'MIDDLE',
+                  },
+                },
+                fields: 'userEnteredFormat(textFormat,backgroundColor,wrapStrategy,verticalAlignment)',
+              },
+            },
+            {
+              repeatCell: {
+                range: {
+                  sheetId: newSheetId,
+                  startRowIndex: 0,
+                  endRowIndex: 1,
+                  startColumnIndex: 5,
+                },
+                cell: {
+                  userEnteredFormat: {
+                    textFormat: { bold: true, fontSize: 10 },
+                    backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 },
+                    wrapStrategy: 'CLIP',
+                    verticalAlignment: 'MIDDLE',
+                  },
+                },
+                fields: 'userEnteredFormat(textFormat,backgroundColor,wrapStrategy,verticalAlignment)',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 },
+                properties: { pixelSize: 42 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 0, endIndex: 1 },
+                properties: { pixelSize: 110 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 1, endIndex: 2 },
+                properties: { pixelSize: 140 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 2, endIndex: 3 },
+                properties: { pixelSize: 80 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 3, endIndex: 4 },
+                properties: { pixelSize: 70 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 4, endIndex: 5 },
+                properties: { pixelSize: 100 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateDimensionProperties: {
+                range: { sheetId: newSheetId, dimension: 'COLUMNS', startIndex: 5, endIndex: 5 + products.length },
+                properties: { pixelSize: 75 },
+                fields: 'pixelSize',
+              },
+            },
+            {
+              updateSheetProperties: {
+                properties: { sheetId: newSheetId, gridProperties: { frozenRowCount: 1 } },
+                fields: 'gridProperties.frozenRowCount',
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    return sheetName;
+  } catch (error) {
+    console.error('Error ensuring expense sheet exists:', error);
+    return null;
+  }
+}
+
+// Find row index by Expense ID
+async function findExpenseRowIndex(sheets: any, spreadsheetId: string, sheetName: string, expenseId: string): Promise<number | null> {
+  try {
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetName}!A:A`,
+    });
+
+    const values = response.data.values || [];
+    const rowIndex = values.findIndex((row: any[]) => row[0] === expenseId);
+    
+    return rowIndex > 0 ? rowIndex + 1 : null;
+  } catch (error) {
+    console.error('Error finding expense row:', error);
+    return null;
+  }
+}
+
+// Log expense to Google Sheets
+export async function logExpenseToSheets(expense: any) {
+  try {
+    const sheets = getGoogleSheetsClient();
+    if (!sheets) {
+      console.warn('Google Sheets client not available');
+      return false;
+    }
+
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    if (!spreadsheetId) {
+      console.warn('GOOGLE_SHEET_ID not set in environment variables');
+      return false;
+    }
+
+    // Only log if status is "final"
+    if (expense.status !== 'final') {
+      console.log(`Skipping log - expense status is "${expense.status}"`);
+      return false;
+    }
+
+    const year = new Date(expense.productionDate).getFullYear();
+    
+    const sheetName = await ensureExpenseSheetExists(sheets, spreadsheetId, year);
+    if (!sheetName) return false;
+
+    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheet = sheetInfo.data.sheets.find((s: any) => s.properties.title === sheetName);
+    const sheetId = sheet?.properties.sheetId;
+
+    const allProducts = await getAllProducts();
+
+    // Calculate product totals from expense items
+    const productTotals: Record<string, number> = {};
+    allProducts.forEach(productName => {
+      productTotals[productName] = 0;
+    });
+
+    if (expense.items) {
+      expense.items.forEach((item: any) => {
+        if (productTotals.hasOwnProperty(item.productName)) {
+          productTotals[item.productName] += parseFloat(item.expense) || 0;
+        }
+      });
+    }
+
+    // Prepare row data
+    const rowData = [
+      expense.expenseId,
+      expense.projectName,
+      expense.status,
+      new Date(expense.productionDate).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' }),
+      Math.round(expense.totalExpense),
+      ...allProducts.map(productName => productTotals[productName] || 0)
+    ];
+
+    const existingRowIndex = await findExpenseRowIndex(sheets, spreadsheetId, sheetName, expense.expenseId);
+
+    if (existingRowIndex) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!A${existingRowIndex}:ZZ${existingRowIndex}`,
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [rowData],
+        },
+      });
+      
+      if (sheetId !== undefined) {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            requests: [
+              {
+                repeatCell: {
+                  range: {
+                    sheetId: sheetId,
+                    startRowIndex: existingRowIndex - 1,
+                    endRowIndex: existingRowIndex,
+                    startColumnIndex: 0,
+                  },
+                  cell: {
+                    userEnteredFormat: {
+                      textFormat: { bold: false, fontSize: 10 },
+                      backgroundColor: { red: 1, green: 1, blue: 1 },
+                    },
+                  },
+                  fields: 'userEnteredFormat(textFormat,backgroundColor)',
+                },
+              },
+            ],
+          },
+        });
+      }
+      
+      console.log(`✅ Updated expense in Google Sheets: ${expense.expenseId}`);
+    } else {
+      const appendResult = await sheets.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${sheetName}!A2:ZZ`,
+        valueInputOption: 'USER_ENTERED',
+        insertDataOption: 'INSERT_ROWS',
+        requestBody: {
+          values: [rowData],
+        },
+      });
+      
+      const updatedRange = appendResult.data.updates.updatedRange;
+      const rowMatch = updatedRange.match(/!A(\d+):/);
+      if (rowMatch && sheetId !== undefined) {
+        const newRowIndex = parseInt(rowMatch[1]);
+        
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          requestBody: {
+            requests: [
+              {
+                repeatCell: {
+                  range: {
+                    sheetId: sheetId,
+                    startRowIndex: newRowIndex - 1,
+                    endRowIndex: newRowIndex,
+                    startColumnIndex: 0,
+                  },
+                  cell: {
+                    userEnteredFormat: {
+                      textFormat: { bold: false, fontSize: 10 },
+                      backgroundColor: { red: 1, green: 1, blue: 1 },
+                    },
+                  },
+                  fields: 'userEnteredFormat(textFormat,backgroundColor)',
+                },
+              },
+            ],
+          },
+        });
+      }
+      
+      console.log(`✅ Added new expense to Google Sheets: ${expense.expenseId}`);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error logging expense to Google Sheets:', error);
+    return false;
+  }
+}
+
+// Delete expense row from Google Sheets
+export async function deleteExpenseFromSheets(expenseId: string, productionDate: Date) {
+  try {
+    const sheets = getGoogleSheetsClient();
+    if (!sheets) {
+      console.warn('Google Sheets client not available');
+      return false;
+    }
+
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+    if (!spreadsheetId) {
+      console.warn('GOOGLE_SHEET_ID not set in environment variables');
+      return false;
+    }
+
+    const year = new Date(productionDate).getFullYear();
+    const sheetName = `EXPENSE ${year}`;
+
+    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+    const sheet = sheetInfo.data.sheets.find((s: any) => s.properties.title === sheetName);
+    if (!sheet) {
+      console.warn(`Sheet ${sheetName} not found`);
+      return false;
+    }
+    const sheetId = sheet.properties.sheetId;
+
+    const existingRowIndex = await findExpenseRowIndex(sheets, spreadsheetId, sheetName, expenseId);
+    if (!existingRowIndex) {
+      console.warn(`Expense ${expenseId} not found in sheet`);
+      return false;
+    }
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetId,
+                dimension: 'ROWS',
+                startIndex: existingRowIndex - 1,
+                endIndex: existingRowIndex,
+              },
+            },
+          },
+        ],
+      },
+    });
+
+    console.log(`✅ Deleted expense row from Google Sheets: ${expenseId}`);
+    return true;
+  } catch (error) {
+    console.error('Error deleting expense from Google Sheets:', error);
+    return false;
+  }
+}
+
