@@ -126,6 +126,37 @@ export default function ViewErhaTicketPage() {
     }
   }
 
+  // Handle copy erha ticket
+  const [copying, setCopying] = useState(false)
+  const handleCopy = async () => {
+    if (!ticket || copying) return
+
+    setCopying(true)
+    try {
+      const response = await fetch(`/api/erha/${ticketId}/copy`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const copiedTicket = await response.json()
+        toast.success("Erha ticket copied successfully", {
+          description: "Redirecting to the copied ticket..."
+        })
+        router.push(`/special-case/erha/${copiedTicket.id}/edit`)
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to copy erha ticket", {
+          description: errorData.error || "An error occurred"
+        })
+      }
+    } catch (error) {
+      console.error("Error copying erha ticket:", error)
+      toast.error("Failed to copy erha ticket")
+    } finally {
+      setCopying(false)
+    }
+  }
+
   const handleScreenshotUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!ticket) return
     
@@ -289,6 +320,16 @@ export default function ViewErhaTicketPage() {
                   {finalizing ? "Finalizing..." : "Finalize Ticket"}
                 </Button>
               )}
+              
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCopy}
+                disabled={copying}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                {copying ? "Copying..." : "Copy"}
+              </Button>
               
               {/* Download Button for Quotation */}
               {viewType === 'quotation' && (

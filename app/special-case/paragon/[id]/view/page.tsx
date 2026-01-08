@@ -135,6 +135,37 @@ export default function ViewParagonTicketPage() {
     }
   }
 
+  // Handle copy paragon ticket
+  const [copying, setCopying] = useState(false)
+  const handleCopy = async () => {
+    if (!ticket || copying) return
+
+    setCopying(true)
+    try {
+      const response = await fetch(`/api/paragon/${ticketId}/copy`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const copiedTicket = await response.json()
+        toast.success("Paragon ticket copied successfully", {
+          description: "Redirecting to the copied ticket..."
+        })
+        router.push(`/special-case/paragon/${copiedTicket.id}/edit`)
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to copy paragon ticket", {
+          description: errorData.error || "An error occurred"
+        })
+      }
+    } catch (error) {
+      console.error("Error copying paragon ticket:", error)
+      toast.error("Failed to copy paragon ticket")
+    } finally {
+      setCopying(false)
+    }
+  }
+
   const handleFinalize = async () => {
     if (!ticket || finalizing) return
     
@@ -328,7 +359,16 @@ export default function ViewParagonTicketPage() {
               )}
               
               {/* Action Buttons */}
-<Button
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopy}
+                disabled={copying}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                {copying ? "Copying..." : "Copy"}
+              </Button>
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={handleWhatsApp}

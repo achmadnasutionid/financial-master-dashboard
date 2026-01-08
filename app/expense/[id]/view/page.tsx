@@ -122,6 +122,37 @@ export default function ViewExpensePage() {
     }
   }
 
+  // Handle copy expense
+  const [copying, setCopying] = useState(false)
+  const handleCopy = async () => {
+    if (!expense || copying) return
+
+    setCopying(true)
+    try {
+      const response = await fetch(`/api/expense/${expenseId}/copy`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const copiedExpense = await response.json()
+        toast.success("Expense copied successfully", {
+          description: "Redirecting to the copied expense..."
+        })
+        router.push(`/expense/${copiedExpense.id}/edit`)
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to copy expense", {
+          description: errorData.error || "An error occurred"
+        })
+      }
+    } catch (error) {
+      console.error("Error copying expense:", error)
+      toast.error("Failed to copy expense")
+    } finally {
+      setCopying(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <PageHeader title="View Expense" showBackButton={true} backTo="/expense" />
@@ -146,6 +177,14 @@ export default function ViewExpensePage() {
             </div>
             {expense.status === "final" && (
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  disabled={copying}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  {copying ? "Copying..." : "Copy"}
+                </Button>
                 <Button
                   variant="outline"
                   onClick={handleWhatsApp}
