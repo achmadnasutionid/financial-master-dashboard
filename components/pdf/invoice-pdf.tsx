@@ -193,6 +193,11 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ data }) => {
   // Get PPh label from constants
   const pphOption = PPH_OPTIONS.find(option => option.value === data.pph)
   const pphLabel = pphOption ? pphOption.label : `PPh (${data.pph}%)`
+  
+  // Split PPh label into main text and note (if exists)
+  const pphParts = pphLabel.split(' - After reporting')
+  const pphMainLabel = pphParts[0]
+  const pphNote = pphParts[1] ? 'After reporting' + pphParts[1] : null
 
   return (
     <Document>
@@ -304,7 +309,14 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ data }) => {
             <Text>{formatCurrency(netAmount)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text>{pphLabel}:</Text>
+            <View style={{ flexDirection: "column" }}>
+              <Text>{pphMainLabel}:</Text>
+              {pphNote && (
+                <Text style={{ fontSize: 8, fontWeight: "bold", marginTop: 2 }}>
+                  {pphNote}
+                </Text>
+              )}
+            </View>
             <Text style={{ color: "green" }}>+ {formatCurrency(pphAmount)}</Text>
           </View>
           <View style={styles.summaryTotal}>
