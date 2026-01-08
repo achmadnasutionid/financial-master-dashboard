@@ -65,11 +65,12 @@ export async function PUT(
       })
       
       // Log status change to Google Sheets (only if pending or accepted)
-      if (quotation.status === 'pending' || quotation.status === 'accepted') {
-        logQuotationToSheets(quotation).catch(err =>
-          console.error('Failed to log quotation status change to sheets:', err)
-        )
-      }
+      // TEMPORARILY DISABLED for faster API performance
+      // if (quotation.status === 'pending' || quotation.status === 'accepted') {
+      //   logQuotationToSheets(quotation).catch(err =>
+      //     console.error('Failed to log quotation status change to sheets:', err)
+      //   )
+      // }
       
       return NextResponse.json(quotation)
     }
@@ -140,11 +141,12 @@ export async function PUT(
     })
 
     // Log to Google Sheets if status is pending or accepted (non-blocking)
-    if (quotation.status === 'pending' || quotation.status === 'accepted') {
-      logQuotationToSheets(quotation).catch(err =>
-        console.error('Failed to log quotation update to sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (quotation.status === 'pending' || quotation.status === 'accepted') {
+    //   logQuotationToSheets(quotation).catch(err =>
+    //     console.error('Failed to log quotation update to sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json(quotation)
   } catch (error) {
@@ -179,10 +181,11 @@ export async function DELETE(
     })
 
     // Delete row from Google Sheets
-    if (quotation) {
-      const { deleteQuotationFromSheets } = await import('@/lib/google-sheets');
-      await deleteQuotationFromSheets(quotation.quotationId, quotation.productionDate);
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (quotation) {
+    //   const { deleteQuotationFromSheets } = await import('@/lib/google-sheets');
+    //   await deleteQuotationFromSheets(quotation.quotationId, quotation.productionDate);
+    // }
 
     return NextResponse.json({ success: true })
   } catch (error) {

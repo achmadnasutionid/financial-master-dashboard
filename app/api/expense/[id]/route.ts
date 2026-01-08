@@ -55,11 +55,12 @@ export async function PUT(
       })
       
       // Log to Google Sheets if status is final
-      if (expense.status === 'final') {
-        logExpenseToSheets(expense).catch(err =>
-          console.error('Failed to log expense to sheets:', err)
-        )
-      }
+      // TEMPORARILY DISABLED for faster API performance
+      // if (expense.status === 'final') {
+      //   logExpenseToSheets(expense).catch(err =>
+      //     console.error('Failed to log expense to sheets:', err)
+      //   )
+      // }
       
       return NextResponse.json(expense)
     }
@@ -93,11 +94,12 @@ export async function PUT(
     })
 
     // Log to Google Sheets if status is final (non-blocking)
-    if (expense.status === 'final') {
-      logExpenseToSheets(expense).catch(err =>
-        console.error('Failed to log expense to sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (expense.status === 'final') {
+    //   logExpenseToSheets(expense).catch(err =>
+    //     console.error('Failed to log expense to sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json(expense)
   } catch (error) {

@@ -64,11 +64,12 @@ export async function PUT(
       })
       
       // Log to Google Sheets if status is pending or paid
-      if (invoice.status === 'pending' || invoice.status === 'paid') {
-        logInvoiceToSheets(invoice).catch(err =>
-          console.error('Failed to log invoice to sheets:', err)
-        )
-      }
+      // TEMPORARILY DISABLED for faster API performance
+      // if (invoice.status === 'pending' || invoice.status === 'paid') {
+      //   logInvoiceToSheets(invoice).catch(err =>
+      //     console.error('Failed to log invoice to sheets:', err)
+      //   )
+      // }
       
       return NextResponse.json(invoice)
     }
@@ -140,11 +141,12 @@ export async function PUT(
     })
 
     // Log to Google Sheets if status is pending or paid (non-blocking)
-    if (invoice.status === 'pending' || invoice.status === 'paid') {
-      logInvoiceToSheets(invoice).catch(err =>
-        console.error('Failed to log invoice to sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (invoice.status === 'pending' || invoice.status === 'paid') {
+    //   logInvoiceToSheets(invoice).catch(err =>
+    //     console.error('Failed to log invoice to sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json(invoice)
   } catch (error) {
@@ -179,11 +181,12 @@ export async function DELETE(
     })
 
     // Delete row from Google Sheets
-    if (invoice) {
-      deleteInvoiceFromSheets(invoice.invoiceId, invoice.productionDate).catch(err =>
-        console.error('Failed to delete invoice from sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (invoice) {
+    //   deleteInvoiceFromSheets(invoice.invoiceId, invoice.productionDate).catch(err =>
+    //     console.error('Failed to delete invoice from sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json({ success: true })
   } catch (error) {

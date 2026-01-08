@@ -135,11 +135,12 @@ export async function POST(request: Request) {
     })
 
     // Log to Google Sheets if status is pending or paid (non-blocking)
-    if (invoice.status === 'pending' || invoice.status === 'paid') {
-      logInvoiceToSheets(invoice).catch(err =>
-        console.error('Failed to log invoice to sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (invoice.status === 'pending' || invoice.status === 'paid') {
+    //   logInvoiceToSheets(invoice).catch(err =>
+    //     console.error('Failed to log invoice to sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {

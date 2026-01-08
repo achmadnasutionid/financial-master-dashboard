@@ -134,11 +134,12 @@ export async function POST(request: Request) {
     })
 
     // Log to Google Sheets if status is pending or accepted (non-blocking)
-    if (quotation.status === 'pending' || quotation.status === 'accepted') {
-      logQuotationToSheets(quotation).catch(err =>
-        console.error('Failed to log quotation to sheets:', err)
-      )
-    }
+    // TEMPORARILY DISABLED for faster API performance
+    // if (quotation.status === 'pending' || quotation.status === 'accepted') {
+    //   logQuotationToSheets(quotation).catch(err =>
+    //     console.error('Failed to log quotation to sheets:', err)
+    //   )
+    // }
 
     return NextResponse.json(quotation, { status: 201 })
   } catch (error) {
