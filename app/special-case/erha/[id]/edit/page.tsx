@@ -914,7 +914,7 @@ export default function EditErhaTicketPage() {
                     <Select value={pph} onValueChange={(value) => {
                       markInteracted()
                       setPph(value)
-                    }} disabled>
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select PPh" />
                       </SelectTrigger>

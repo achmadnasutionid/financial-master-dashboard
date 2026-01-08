@@ -758,7 +758,7 @@ export default function CreateParagonTicketPage() {
                     <Select value={pph} onValueChange={(value) => {
                       markInteracted()
                       setPph(value)
-                    }} disabled>
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select PPh" />
                       </SelectTrigger>
