@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header"
 import { useFetch } from "@/hooks/use-fetch"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
-import { Download, MessageCircle, FileText } from "lucide-react"
+import { Download, MessageCircle, FileText, Copy } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer"
 import { PlanningPDF } from "@/components/pdf/planning-pdf"
@@ -185,6 +185,37 @@ export default function ViewPlanningPage() {
     }
   }
 
+  // Handle copy planning
+  const [copying, setCopying] = useState(false)
+  const handleCopy = async () => {
+    if (!planning || copying) return
+
+    setCopying(true)
+    try {
+      const response = await fetch(`/api/planning/${planningId}/copy`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const copiedPlanning = await response.json()
+        toast.success("Planning copied successfully", {
+          description: "Redirecting to the copied planning..."
+        })
+        router.push(`/planning/${copiedPlanning.id}/edit`)
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to copy planning", {
+          description: errorData.error || "An error occurred"
+        })
+      }
+    } catch (error) {
+      console.error("Error copying planning:", error)
+      toast.error("Failed to copy planning")
+    } finally {
+      setCopying(false)
+    }
+  }
+
   if (loading || !mounted) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -239,6 +270,14 @@ export default function ViewPlanningPage() {
                 >
                   <FileText className="mr-2 h-4 w-4" />
                   {planning.generatedQuotationId ? "View Quotation" : "Generate Quotation"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  disabled={copying}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  {copying ? "Copying..." : "Copy"}
                 </Button>
                 <Button
                   variant="outline"

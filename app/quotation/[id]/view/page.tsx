@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/layout/page-header"
 import { useFetch } from "@/hooks/use-fetch"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
-import { Download, MessageCircle, FileText, CheckCircle } from "lucide-react"
+import { Download, MessageCircle, FileText, CheckCircle, Copy } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer"
 import { QuotationPDF } from "@/components/pdf/quotation-pdf"
@@ -114,6 +114,37 @@ export default function ViewQuotationPage() {
       toast.error("Failed to prepare share", {
         description: "Could not download PDF or open WhatsApp.",
       })
+    }
+  }
+
+  // Handle copy quotation
+  const [copying, setCopying] = useState(false)
+  const handleCopy = async () => {
+    if (!quotation || copying) return
+
+    setCopying(true)
+    try {
+      const response = await fetch(`/api/quotation/${quotationId}/copy`, {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        const copiedQuotation = await response.json()
+        toast.success("Quotation copied successfully", {
+          description: "Redirecting to the copied quotation..."
+        })
+        router.push(`/quotation/${copiedQuotation.id}/edit`)
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to copy quotation", {
+          description: errorData.error || "An error occurred"
+        })
+      }
+    } catch (error) {
+      console.error("Error copying quotation:", error)
+      toast.error("Failed to copy quotation")
+    } finally {
+      setCopying(false)
     }
   }
 
@@ -281,6 +312,14 @@ export default function ViewQuotationPage() {
                       : "Generate Invoice"}
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={handleCopy}
+                  disabled={copying}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  {copying ? "Copying..." : "Copy"}
+                </Button>
                 <Button
                   variant="outline"
                   onClick={handleWhatsApp}
