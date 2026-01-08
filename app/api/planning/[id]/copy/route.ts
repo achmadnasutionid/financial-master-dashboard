@@ -38,12 +38,7 @@ export async function POST(
     const originalPlanning = await prisma.planning.findUnique({
       where: { id },
       include: {
-        items: {
-          include: {
-            details: true
-          }
-        },
-        remarks: true
+        items: true
       }
     })
 
@@ -62,55 +57,20 @@ export async function POST(
       data: {
         planningId: newPlanningId,
         projectName: `${originalPlanning.projectName} - Copy`,
-        companyName: originalPlanning.companyName,
-        companyAddress: originalPlanning.companyAddress,
-        companyCity: originalPlanning.companyCity,
-        companyProvince: originalPlanning.companyProvince,
-        companyTelp: originalPlanning.companyTelp,
-        companyEmail: originalPlanning.companyEmail,
-        productionDate: originalPlanning.productionDate,
-        billTo: originalPlanning.billTo,
+        clientName: originalPlanning.clientName,
+        clientBudget: originalPlanning.clientBudget,
         notes: originalPlanning.notes,
-        billingName: originalPlanning.billingName,
-        billingBankName: originalPlanning.billingBankName,
-        billingBankAccount: originalPlanning.billingBankAccount,
-        billingBankAccountName: originalPlanning.billingBankAccountName,
-        billingKtp: originalPlanning.billingKtp,
-        billingNpwp: originalPlanning.billingNpwp,
-        signatureName: originalPlanning.signatureName,
-        signatureRole: originalPlanning.signatureRole,
-        signatureImageData: originalPlanning.signatureImageData,
-        pph: originalPlanning.pph,
-        totalAmount: originalPlanning.totalAmount,
         status: "draft", // Always create copy as draft
         items: {
           create: originalPlanning.items.map(item => ({
             productName: item.productName,
-            total: item.total,
-            details: {
-              create: item.details.map(detail => ({
-                detail: detail.detail,
-                unitPrice: detail.unitPrice,
-                qty: detail.qty,
-                amount: detail.amount
-              }))
-            }
-          }))
-        },
-        remarks: {
-          create: originalPlanning.remarks.map(remark => ({
-            text: remark.text,
-            isCompleted: remark.isCompleted
+            budget: item.budget,
+            expense: item.expense
           }))
         }
       },
       include: {
-        items: {
-          include: {
-            details: true
-          }
-        },
-        remarks: true
+        items: true
       }
     })
 

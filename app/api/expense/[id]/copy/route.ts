@@ -57,20 +57,12 @@ export async function POST(
       data: {
         expenseId: newExpenseId,
         projectName: `${originalExpense.projectName} - Copy`,
+        productionDate: originalExpense.productionDate,
         clientBudget: originalExpense.clientBudget,
+        paidAmount: originalExpense.paidAmount,
         notes: originalExpense.notes,
         totalItemBudgeted: originalExpense.totalItemBudgeted,
-        totalItemActual: originalExpense.totalItemActual,
-        totalItemDifference: originalExpense.totalItemDifference,
-        totalBigBudget: originalExpense.totalBigBudget,
-        totalBigActual: originalExpense.totalBigActual,
-        totalBigDifference: originalExpense.totalBigDifference,
-        totalGearBudget: originalExpense.totalGearBudget,
-        totalGearActual: originalExpense.totalGearActual,
-        totalGearDifference: originalExpense.totalGearDifference,
-        overallTotalBudgeted: originalExpense.overallTotalBudgeted,
-        overallTotalActual: originalExpense.overallTotalActual,
-        overallTotalDifference: originalExpense.overallTotalDifference,
+        totalItemDifferences: originalExpense.totalItemDifferences,
         status: "draft", // Always create copy as draft
         items: {
           create: originalExpense.items.map(item => ({

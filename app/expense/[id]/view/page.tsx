@@ -6,7 +6,7 @@ import { useFetch } from "@/hooks/use-fetch"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Download, MessageCircle, Copy } from "lucide-react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { PDFDownloadLink, pdf } from "@react-pdf/renderer"
 import { ExpensePDF } from "@/components/pdf/expense-pdf"
 import { LazyPDFViewer } from "@/components/pdf/lazy-pdf-viewer"
@@ -35,6 +35,7 @@ interface Expense {
 
 export default function ViewExpensePage() {
   const params = useParams()
+  const router = useRouter()
   const expenseId = params?.id as string
   const [mounted, setMounted] = useState(false)
 

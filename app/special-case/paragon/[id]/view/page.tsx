@@ -142,7 +142,7 @@ export default function ViewParagonTicketPage() {
 
     setCopying(true)
     try {
-      const response = await fetch(`/api/paragon/${ticketId}/copy`, {
+      const response = await fetch(`/api/paragon/${ticket.id}/copy`, {
         method: "POST",
       })
 

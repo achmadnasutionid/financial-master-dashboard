@@ -133,7 +133,7 @@ export default function ViewErhaTicketPage() {
 
     setCopying(true)
     try {
-      const response = await fetch(`/api/erha/${ticketId}/copy`, {
+      const response = await fetch(`/api/erha/${ticket.id}/copy`, {
         method: "POST",
       })
 
