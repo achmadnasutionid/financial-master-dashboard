@@ -6,12 +6,33 @@ export function middleware(request: NextRequest) {
 
   // Add cache control headers for API responses
   if (request.nextUrl.pathname.startsWith("/api/")) {
-    // For GET requests, allow caching for 60 seconds
+    // Only cache MASTER DATA endpoints (rarely change)
+    const masterDataEndpoints = [
+      "/api/companies",
+      "/api/products",
+      "/api/billings",
+      "/api/signatures",
+    ]
+    
+    const isMasterData = masterDataEndpoints.some(endpoint => 
+      request.nextUrl.pathname === endpoint || 
+      request.nextUrl.pathname.startsWith(endpoint + "/")
+    )
+    
     if (request.method === "GET") {
-      response.headers.set(
-        "Cache-Control",
-        "public, s-maxage=60, stale-while-revalidate=300"
-      )
+      if (isMasterData) {
+        // Cache master data for 60 seconds
+        response.headers.set(
+          "Cache-Control",
+          "public, s-maxage=60, stale-while-revalidate=300"
+        )
+      } else {
+        // NO CACHE for transaction data (quotations, invoices, expenses, etc)
+        response.headers.set(
+          "Cache-Control",
+          "no-store, no-cache, must-revalidate, max-age=0"
+        )
+      }
     }
     
     // Enable compression hint
